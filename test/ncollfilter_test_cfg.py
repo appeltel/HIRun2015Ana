@@ -19,7 +19,7 @@ process.source = cms.Source("PoolSource",
 )
 
 
-process.load('Appeltel.NcollFilter.NcollFilter_cfi')
+process.load('Appeltel.HIRun2015Ana.NcollFilter_cfi')
 process.ncFilter = process.ncollFilter.clone(
     ncollmax = 3000
 )

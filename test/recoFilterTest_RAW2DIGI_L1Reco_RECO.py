@@ -75,7 +75,7 @@ process.RECOSIMoutput_step = cms.EndPath(process.RECOSIMoutput)
 process.schedule = cms.Schedule(process.raw2digi_step,process.L1Reco_step,process.reconstruction_step,process.endjob_step,process.RECOSIMoutput_step)
 
 # Add Ncoll Filter
-process.load('Appeltel.NcollFilter.NcollFilter_cfi')
+process.load('Appeltel.HIRun2015Ana.NcollFilter_cfi')
 process.ncFilter = process.ncollFilter.clone(
     ncollmax = 3000
 )
