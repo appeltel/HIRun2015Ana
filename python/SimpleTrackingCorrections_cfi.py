@@ -4,8 +4,8 @@ import FWCore.ParameterSet.Config as cms
 SimpleTrkCorr  = cms.EDAnalyzer('SimpleTrackingCorrections',
     trackSrc = cms.InputTag("hiGeneralTracks"),
     vertexSrc = cms.InputTag("hiSelectedVertex"),
-    tpEffSrc = cms.InputTag('mergedtruth','MergedTrackTruth'),
-    tpFakSrc = cms.InputTag('mergedtruth','MergedTrackTruth'),
+    tpEffSrc = cms.InputTag('mix','MergedTrackTruth'),
+    tpFakSrc = cms.InputTag('mix','MergedTrackTruth'),
     associatorMap = cms.InputTag('tpRecoAssocGeneralTracks'),
     ptBins = cms.vdouble(
         0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45,
