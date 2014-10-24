@@ -60,9 +60,8 @@ class NcollFilter : public edm::EDFilter {
       //virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
 
       // ----------member data ---------------------------
-      std::vector<std::string> hepmcSrc_;
       int ncollmax_;
-
+      std::vector<edm::EDGetTokenT<edm::HepMCProduct> > hepmcSrc_;
 };
 
 //
@@ -77,7 +76,6 @@ class NcollFilter : public edm::EDFilter {
 // constructors and destructor
 //
 NcollFilter::NcollFilter(const edm::ParameterSet& iConfig):
-hepmcSrc_(iConfig.getParameter<std::vector<std::string> >("generators")),
 ncollmax_(iConfig.getParameter<int>("ncollmax"))
 {
   edm::Service<edm::RandomNumberGenerator> rng;
@@ -88,8 +86,9 @@ ncollmax_(iConfig.getParameter<int>("ncollmax"))
          "the service in the configuration file or remove the modules that\n"
          "require it.\n";
   }
-
-
+  for(const auto & src : iConfig.getParameter<std::vector<edm::InputTag> >("generators") )
+    hepmcSrc_.push_back( consumes<edm::HepMCProduct>(src));
+  
 }
 
 
@@ -114,10 +113,10 @@ NcollFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
    CLHEP::HepRandomEngine& engine = rng->getEngine(iEvent.streamID());
    double threshold = engine.flat() * (double)ncollmax_;
 
-   for(size_t ihep = 0; ihep < hepmcSrc_.size(); ++ihep)
+   for(const auto & src : hepmcSrc_ )
    {
      edm::Handle<edm::HepMCProduct> hepmc;
-     iEvent.getByLabel(hepmcSrc_[ihep],hepmc);
+     iEvent.getByToken(src,hepmc);
      const HepMC::HeavyIon* hi = hepmc->GetEvent()->heavy_ion();
      ncoll += hi->Ncoll();
    } 
