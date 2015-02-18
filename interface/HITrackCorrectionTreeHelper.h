@@ -1,3 +1,6 @@
+#ifndef HIRun2015Ana_HITrackCorrectionTreeHelper
+#define HIRun2015Ana_HITrackCorrectionTreeHelper
+
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "SimDataFormats/TrackingAnalysis/interface/TrackingParticle.h"
@@ -122,4 +125,6 @@ class HITrackCorrectionTreeHelper
 
     void SetSim(const reco::Track &, const reco::TrackingParticle &, const reco::Vertex &);
     void SetSim(const reco::Track &, const reco::TrackingParticle &, const reco::Vertex &, double );
-}; 
+};
+
+#endif 
