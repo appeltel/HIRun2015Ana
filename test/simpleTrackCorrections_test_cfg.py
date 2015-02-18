@@ -28,7 +28,7 @@ process.load("SimTracker.TrackAssociation.trackingParticleRecoTrackAsssociation_
 process.tpRecoAssocGeneralTracks = process.trackingParticleRecoTrackAsssociation.clone()
 process.tpRecoAssocGeneralTracks.label_tr = cms.InputTag("hiGeneralTracks")
 
-process.load("SimTracker.TrackAssociation.quickTrackAssociatorByHits_cfi")
+process.load("SimTracker.TrackAssociatorProducers.quickTrackAssociatorByHits_cfi")
 process.quickTrackAssociatorByHits.SimToRecoDenominator = cms.string('reco')
 
 process.load("SimTracker.TrackerHitAssociation.clusterTpAssociationProducer_cfi")
@@ -37,7 +37,8 @@ process.load("SimTracker.TrackerHitAssociation.clusterTpAssociationProducer_cfi"
 process.source = cms.Source("PoolSource",
     duplicateCheckMode = cms.untracked.string("noDuplicateCheck"),
     fileNames =  cms.untracked.vstring(
-'/store/user/appelte1/RecoDevelTestFiles/HYDJET_NcollFilter_5020GeV_HIRun2015Development_7_2_0_pre7_RECODEBUG.root'
+#'file:step3_RAW2DIGI_L1Reco_RECO.root'
+'/store/user/mnguyen/PyquenUnquenched_Dijet_pthat80_740pre6_GEN-SIM/PyquenUnquenched_Dijet_pthat80_740pre6_MCHI2_74_V0_RECO/35189fe3832afd77f4f2029b245352e2/step3_RAW2DIGI_L1Reco_RECO_100_1_0f3.root'
     )
 )
 
@@ -45,10 +46,11 @@ process.source = cms.Source("PoolSource",
 #process.hltSingleTrigger = process.hltHighLevel.clone()
 #process.hltSingleTrigger.HLTPaths = ["HLT_PAZeroBiasPixel_SingleTrack_v1"]
 
-process.GlobalTag.globaltag = 'PRE_SHI72_V7::All'
+process.GlobalTag.globaltag = 'MCHI2_74_V0::All'
 
 process.p = cms.Path( 
                       process.tpClusterProducer *
+                      process.quickTrackAssociatorByHits *
                       process.tpRecoAssocGeneralTracks *
                       process.SimpleTrkCorr 
 )
