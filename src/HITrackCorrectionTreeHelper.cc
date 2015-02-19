@@ -10,19 +10,34 @@ HITrackCorrectionTreeHelper::HITrackCorrectionTreeHelper()
 }
 
 void
-HITrackCorrectionTreeHelper::Set(const reco::Track & t, const TrackingParticle & p, const reco::Vertex & v, int matches)
+HITrackCorrectionTreeHelper::Set(const TrackingParticle & p, const reco::Track & t, const reco::Vertex & v, int matches, int cbin)
 {
 
-  b.ids = p.pdgId();
-  b.status = p.status();  
-  b.charges = p.charge();
-  b.pts = p.pt();
-  b.etas = p.eta();
-  b.phis = p.phi();
-  b.hits = p.matchedHit();
-  
+  SetTP(p);
+  SetTrack(t,v); 
   b.nmatch = matches;
+  b.cbin = cbin;
+}
 
+void
+HITrackCorrectionTreeHelper::Set(const reco::Track & t, const reco::Vertex & v, int cbin)
+{
+  SetTrack(t,v);
+  b.nmatch = 0;
+  b.cbin = cbin;
+}
+
+void
+HITrackCorrectionTreeHelper::Set(const TrackingParticle & p, int cbin)
+{
+  SetTP(p);
+  b.nmatch = 0;
+  b.cbin = cbin;
+}
+
+void
+HITrackCorrectionTreeHelper::SetTrack(const reco::Track & t, const reco::Vertex & v)
+{
   b.charger = t.charge();
   b.ptr = t.pt();
   b.etar = t.eta();
@@ -52,14 +67,16 @@ HITrackCorrectionTreeHelper::Set(const reco::Track & t, const TrackingParticle &
   b.hitr = t.numberOfValidHits();
   b.chi2r = t.normalizedChi2();
   b.algo = t.algo();
-
-  // centrality defaults to zero 
-  b.cbin = 0;
 }
 
 void
-HITrackCorrectionTreeHelper::Set(const reco::Track & t, const TrackingParticle & p, const reco::Vertex & v, int matches, int cbin)
+HITrackCorrectionTreeHelper::SetTP(const TrackingParticle & p)
 {
-  this->Set(t,p,v,matches);
-  b.cbin = cbin;
+  b.ids = p.pdgId();
+  b.status = p.status();  
+  b.charges = p.charge();
+  b.pts = p.pt();
+  b.etas = p.eta();
+  b.phis = p.phi();
+  b.hits = p.matchedHit();
 }

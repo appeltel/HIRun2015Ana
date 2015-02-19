@@ -21,6 +21,7 @@
 #include <TH2.h>
 #include <TH3.h>
 #include <TF1.h>
+#include <TTree.h>
 
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
@@ -34,6 +35,8 @@
 #include "SimTracker/Records/interface/TrackAssociatorRecord.h"
 #include "DataFormats/RecoCandidate/interface/TrackAssociation.h"
 #include "SimTracker/TrackAssociation/interface/TrackAssociatorByHits.h"
+
+#include "Appeltel/HIRun2015Ana/interface/HITrackCorrectionTreeHelper.h"
 
 class SimpleTrackingCorrections : public edm::EDAnalyzer {
    public:
@@ -52,10 +55,13 @@ class SimpleTrackingCorrections : public edm::EDAnalyzer {
       // ----------member data ---------------------------
 
 
+      std::map<std::string,TTree*> trkTree_;
       std::map<std::string,TH2F*> trkCorr2D_;
       TH3F * momRes_;
       TH1F * vtxZ_;
       TF1 * vtxWeightFunc_;
+
+      HITrackCorrectionTreeHelper treeHelper_;
 
       edm::InputTag vertexSrc_;
       edm::InputTag trackSrc_;
@@ -81,9 +87,12 @@ class SimpleTrackingCorrections : public edm::EDAnalyzer {
 
       bool doMomRes_;
 
+      bool fillNTuples_;
+
 };
 
 SimpleTrackingCorrections::SimpleTrackingCorrections(const edm::ParameterSet& iConfig):
+treeHelper_(),
 vertexSrc_(iConfig.getParameter<edm::InputTag>("vertexSrc")),
 trackSrc_(iConfig.getParameter<edm::InputTag>("trackSrc")),
 tpFakSrc_(iConfig.getParameter<edm::InputTag>("tpFakSrc")),
@@ -100,7 +109,8 @@ qualityString_(iConfig.getParameter<std::string>("qualityString")),
 dxyErrMax_(iConfig.getParameter<double>("dzErrMax")),
 dzErrMax_(iConfig.getParameter<double>("dzErrMax")),
 ptErrMax_(iConfig.getParameter<double>("ptErrMax")),
-doMomRes_(iConfig.getParameter<bool>("doMomRes"))
+doMomRes_(iConfig.getParameter<bool>("doMomRes")),
+fillNTuples_(iConfig.getParameter<bool>("fillNTuples"))
 {
    edm::Service<TFileService> fs;
    initHistos(fs);
@@ -114,6 +124,13 @@ doMomRes_(iConfig.getParameter<bool>("doMomRes"))
        vtxWeightFunc_->SetParameter(i,vtxWeightParameters_[i]);
    }
 
+   if( fillNTuples_ )
+   {
+     trkTree_["rec"] = fs->make<TTree>("recTree","recTree");
+     trkTree_["rec"]->Branch("recValues",&treeHelper_.b,treeHelper_.hiTrackLeafString.Data());
+     trkTree_["sim"] = fs->make<TTree>("simTree","simTree");
+     trkTree_["sim"]->Branch("simValues",&treeHelper_.b,treeHelper_.hiTrackLeafString.Data());
+   }
 }
 
 SimpleTrackingCorrections::~SimpleTrackingCorrections()
@@ -125,7 +142,6 @@ void
 SimpleTrackingCorrections::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
    using namespace edm;
-
 
    // obtain collections of simulated particles 
    edm::Handle<TrackingParticleCollection>  TPCollectionHeff, TPCollectionHfake;
@@ -200,6 +216,7 @@ SimpleTrackingCorrections::analyze(const edm::Event& iEvent, const edm::EventSet
      {
        tp = recSimColl[track];
        mtp = tp.begin()->first.get();  
+       if( fillNTuples_) treeHelper_.Set(*mtp, *tr, vsorted[0], tp.size(),  multiplicity); 
        if( mtp->status() < 0 ) 
        {
          trkCorr2D_["hsec"]->Fill(tr->eta(), tr->pt(), w);     
@@ -207,9 +224,10 @@ SimpleTrackingCorrections::analyze(const edm::Event& iEvent, const edm::EventSet
      }
      else
      {
+       if( fillNTuples_) treeHelper_.Set(*tr, vsorted[0], multiplicity); 
        trkCorr2D_["hfak"]->Fill(tr->eta(), tr->pt(), w);
      }
-    
+     if( fillNTuples_) trkTree_["rec"]->Fill(); 
    }
 
    // ---------------------
@@ -239,9 +257,12 @@ SimpleTrackingCorrections::analyze(const edm::Event& iEvent, const edm::EventSet
          nrec++;
          if( doMomRes_ ) momRes_->Fill( tp->eta(), tp->pt(), tmtr->pt(), w);
        }
+       if( nrec>0 && fillNTuples_ ) treeHelper_.Set(*tp, *(rt.begin()->first.get()), vsorted[0], rt.size(),  multiplicity);
+       if( nrec==0 && fillNTuples_ ) treeHelper_.Set(*tp, multiplicity);
      }
      if(nrec>0) trkCorr2D_["heff"]->Fill(tp->eta(),tp->pt(), w);
      if(nrec>1) trkCorr2D_["hmul"]->Fill(tp->eta(),tp->pt(), w);
+     if( fillNTuples_) trkTree_["sim"]->Fill(); 
    }
 }
 

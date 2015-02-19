@@ -1,3 +1,9 @@
+<use name="FWCore/Framework"/>
+<use name="FWCore/PluginManager"/>
+<use name="FWCore/ParameterSet"/>
+<use name="FWCore/Utilities"/>
+<use name="FWCore/ServiceRegistry"/>
+<use name="CommonTools/UtilAlgos"/>
 <use name="DataFormats/TrackReco"/>
 <use name="DataFormats/VertexReco"/>
 <use name="SimTracker/Records"/>
@@ -5,3 +11,4 @@
 <use name="CLHEP"/>
 <use name="hepmc"/>
 <use name="SimDataFormats/GeneratorProducts"/>
+<flags EDM_PLUGIN="1"/>
