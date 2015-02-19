@@ -72,13 +72,14 @@ class HITrackCorrectionTreeHelper
 {
   public:
 
-    HITrackBranches_t b;
+    HITrackCorrectionTreeHelper();
 
+    void Set(const reco::Track &, const TrackingParticle &, const reco::Vertex &, int );
+    void Set(const reco::Track &, const TrackingParticle &, const reco::Vertex &, int, int );
+
+    HITrackBranches_t b;
     TString hiTrackLeafString;
   
-    void Set(const reco::Track &, const reco::TrackingParticle &, const reco::Vertex &);
-    void Set(const reco::Track &, const reco::TrackingParticle &, const reco::Vertex &, double );
-
 };
 
 #endif 

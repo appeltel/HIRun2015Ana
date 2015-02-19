@@ -1,0 +1,7 @@
+<use name="DataFormats/TrackReco"/>
+<use name="DataFormats/VertexReco"/>
+<use name="SimTracker/Records"/>
+<use name="SimTracker/TrackAssociation"/>
+<use name="CLHEP"/>
+<use name="hepmc"/>
+<use name="SimDataFormats/GeneratorProducts"/>
