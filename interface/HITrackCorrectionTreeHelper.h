@@ -24,8 +24,8 @@ typedef struct
 
   // kinematics
   Int_t charges;
-  Float_t etas;
   Float_t pts;
+  Float_t etas;
   Float_t phis;
 
   // G4SimHits of simulated particle
@@ -45,9 +45,9 @@ typedef struct
   Float_t phierr;
 
   // vertex compatibility of matched track
-  Float_t dz;
   Float_t d0;
   Float_t d0err;
+  Float_t dz;
   Float_t dzerr;
 
   // reconstructed hits of matched track and goodness of fit
@@ -70,17 +70,17 @@ typedef struct
 
   // reco track kinematics
   Int_t charger;
-  Float_t etar;
   Float_t ptr;
+  Float_t etar;
   Float_t phir;
   Float_t pterr;
   Float_t etaerr;
   Float_t phierr;
 
   // vertex compatibility
-  Float_t dz;
   Float_t d0;
   Float_t d0err;
+  Float_t dz;
   Float_t dzerr;
 
   // number of hits and chi2
@@ -94,13 +94,16 @@ typedef struct
   Int_t nsim;
 
   // status and pdgid of matched particle
-  Int_t status;
   Int_t ids;
+  Int_t status;
 
   // kinematics of matched particle
-  Float_t etas;
   Float_t pts;
+  Float_t etas;
   Float_t phis;
+
+  // G4SimHits of matched particle
+  Int_t hits;
 
   // centrality bin of event
   Int_t cbin;
