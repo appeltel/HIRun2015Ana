@@ -30,5 +30,6 @@ SimpleTrkCorr  = cms.EDAnalyzer('SimpleTrackingCorrections',
     dxyErrMax = cms.double(999.0),
     dzErrMax = cms.double(999.0),
     ptErrMax = cms.double(999.0),
-    doMomRes = cms.bool(False)
+    doMomRes = cms.bool(False),
+    fillNTuples = cms.bool(False)
 )
