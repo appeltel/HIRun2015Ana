@@ -3,7 +3,7 @@
 HITrackCorrectionTreeHelper::HITrackCorrectionTreeHelper()
 {
   hiTrackLeafString = "ids/I:status/I:charges/I:pts/F:etas/F:phis/F:hits/I";
-  hiTrackLeafString = ":nmatch/I";
+  hiTrackLeafString += ":nmatch/I";
   hiTrackLeafString += ":charger/I:ptr/F:etar/F:phir/F:pterr/F:etaerr/F:phierr/F";
   hiTrackLeafString += ":d0/F:d0err/F:dz/F:dzerr/F:hitr/I:chi2r/F:algo/I";
   hiTrackLeafString += ":cbin/I";
@@ -78,5 +78,5 @@ HITrackCorrectionTreeHelper::SetTP(const TrackingParticle & p)
   b.pts = p.pt();
   b.etas = p.eta();
   b.phis = p.phi();
-  b.hits = p.matchedHit();
+  b.hits = p.numberOfTrackerLayers();
 }
