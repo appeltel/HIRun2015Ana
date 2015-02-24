@@ -5,7 +5,7 @@ HITrackCorrectionTreeHelper::HITrackCorrectionTreeHelper()
   hiTrackLeafString = "ids/I:status/I:charges/I:pts/F:etas/F:phis/F:hits/I";
   hiTrackLeafString += ":nmatch/I";
   hiTrackLeafString += ":charger/I:ptr/F:etar/F:phir/F:pterr/F:etaerr/F:phierr/F";
-  hiTrackLeafString += ":d0/F:d0err/F:dz/F:dzerr/F:hitr/I:chi2r/F:algo/I";
+  hiTrackLeafString += ":d0/F:d0err/F:dz/F:dzerr/F:hitr/I:chi2r/F:algo/I:highPurityr/O";
   hiTrackLeafString += ":cbin/I";
 }
 
@@ -67,6 +67,8 @@ HITrackCorrectionTreeHelper::SetTrack(const reco::Track & t, const reco::Vertex 
   b.hitr = t.numberOfValidHits();
   b.chi2r = t.normalizedChi2();
   b.algo = t.algo();
+  b.highPurityr = t.quality(reco::TrackBase::qualityByName("highPurity"));
+
 }
 
 void
