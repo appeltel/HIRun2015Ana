@@ -54,8 +54,10 @@ typedef struct
   Float_t dzerr;
 
   // reconstructed hits of reco track and goodness of fit
+  // and highPurity bit
   Int_t hitr;
   Float_t chi2r;
+  Bool_t highPurityr;
 
   // Iteration of reco track
   Int_t algo;
