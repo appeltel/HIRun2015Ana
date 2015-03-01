@@ -16,6 +16,7 @@
 
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include "FWCore/Utilities/interface/EDGetToken.h"
 
 #include <TH1.h>
 #include <TH2.h>
@@ -63,11 +64,12 @@ class HITrackCorrectionAnalyzer : public edm::EDAnalyzer {
 
       HITrackCorrectionTreeHelper treeHelper_;
 
-      edm::InputTag vertexSrc_;
-      edm::InputTag trackSrc_;
-      edm::InputTag tpFakSrc_;
-      edm::InputTag tpEffSrc_;
-      edm::InputTag associatorMap_;
+      edm::EDGetTokenT<reco::VertexCollection> vertexSrc_;
+      edm::EDGetTokenT<edm::View<reco::Track> > trackSrc_;
+      edm::EDGetTokenT<TrackingParticleCollection> tpFakSrc_;
+      edm::EDGetTokenT<TrackingParticleCollection> tpEffSrc_;
+      edm::EDGetTokenT<reco::RecoToSimCollection> associatorMapRTS_;
+      edm::EDGetTokenT<reco::SimToRecoCollection> associatorMapSTR_;
 
       std::vector<double> ptBins_;
       std::vector<double> etaBins_;
@@ -93,11 +95,12 @@ class HITrackCorrectionAnalyzer : public edm::EDAnalyzer {
 
 HITrackCorrectionAnalyzer::HITrackCorrectionAnalyzer(const edm::ParameterSet& iConfig):
 treeHelper_(),
-vertexSrc_(iConfig.getParameter<edm::InputTag>("vertexSrc")),
-trackSrc_(iConfig.getParameter<edm::InputTag>("trackSrc")),
-tpFakSrc_(iConfig.getParameter<edm::InputTag>("tpFakSrc")),
-tpEffSrc_(iConfig.getParameter<edm::InputTag>("tpEffSrc")),
-associatorMap_(iConfig.getParameter<edm::InputTag>("associatorMap")),
+vertexSrc_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertexSrc"))),
+trackSrc_(consumes<edm::View<reco::Track> >(iConfig.getParameter<edm::InputTag>("trackSrc"))),
+tpFakSrc_(consumes<TrackingParticleCollection>(iConfig.getParameter<edm::InputTag>("tpFakSrc"))),
+tpEffSrc_(consumes<TrackingParticleCollection>(iConfig.getParameter<edm::InputTag>("tpEffSrc"))),
+associatorMapRTS_(consumes<reco::RecoToSimCollection>(iConfig.getParameter<edm::InputTag>("associatorMap"))),
+associatorMapSTR_(consumes<reco::SimToRecoCollection>(iConfig.getParameter<edm::InputTag>("associatorMap"))),
 ptBins_(iConfig.getParameter<std::vector<double> >("ptBins")),
 etaBins_(iConfig.getParameter<std::vector<double> >("etaBins")),
 vtxWeightParameters_(iConfig.getParameter<std::vector<double> >("vtxWeightParameters")),
@@ -145,29 +148,29 @@ HITrackCorrectionAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 
    // obtain collections of simulated particles 
    edm::Handle<TrackingParticleCollection>  TPCollectionHeff, TPCollectionHfake;
-   iEvent.getByLabel(tpEffSrc_,TPCollectionHeff);
-   iEvent.getByLabel(tpFakSrc_,TPCollectionHfake);
+   iEvent.getByToken(tpEffSrc_,TPCollectionHeff);
+   iEvent.getByToken(tpFakSrc_,TPCollectionHfake);
 
    // obtain association map between tracks and simulated particles
    reco::RecoToSimCollection recSimColl;
    reco::SimToRecoCollection simRecColl;
    edm::Handle<reco::SimToRecoCollection > simtorecoCollectionH;
    edm::Handle<reco::RecoToSimCollection > recotosimCollectionH;
-   iEvent.getByLabel(associatorMap_,simtorecoCollectionH);
+   iEvent.getByToken(associatorMapSTR_,simtorecoCollectionH);
    simRecColl= *(simtorecoCollectionH.product());
-   iEvent.getByLabel(associatorMap_,recotosimCollectionH);
+   iEvent.getByToken(associatorMapRTS_,recotosimCollectionH);
    recSimColl= *(recotosimCollectionH.product());
 
    // obtain reconstructed tracks
    Handle<edm::View<reco::Track> > tcol;
-   iEvent.getByLabel(trackSrc_, tcol);
+   iEvent.getByToken(trackSrc_, tcol);
 
    // obtain primary vertices
-   Handle<std::vector<reco::Vertex> > vertex;
-   iEvent.getByLabel(vertexSrc_, vertex);
+   Handle<reco::VertexCollection> vertex;
+   iEvent.getByToken(vertexSrc_, vertex);
   
    // sort the vertcies by number of tracks in descending order
-   std::vector<reco::Vertex> vsorted = *vertex;
+   reco::VertexCollection vsorted = *vertex;
    std::sort( vsorted.begin(), vsorted.end(), HITrackCorrectionAnalyzer::vtxSort );
 
    // skip events with no PV, this should not happen
@@ -200,8 +203,7 @@ HITrackCorrectionAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
    // loop through reco tracks to fill fake, reco, and secondary histograms
    // ---------------------
 
-   for(edm::View<reco::Track>::size_type i=0; i<tcol->size(); ++i){
-    
+   for(edm::View<reco::Track>::size_type i=0; i<tcol->size(); ++i){ 
      edm::RefToBase<reco::Track> track(tcol, i);
      reco::Track* tr=const_cast<reco::Track*>(track.get());
      // skip tracks that fail cuts, using vertex with most tracks as PV       
