@@ -38,10 +38,10 @@
 
 #include "Appeltel/HIRun2015Ana/interface/HITrackCorrectionTreeHelper.h"
 
-class SimpleTrackingCorrections : public edm::EDAnalyzer {
+class HITrackCorrectionAnalyzer : public edm::EDAnalyzer {
    public:
-      explicit SimpleTrackingCorrections(const edm::ParameterSet&);
-      ~SimpleTrackingCorrections();
+      explicit HITrackCorrectionAnalyzer(const edm::ParameterSet&);
+      ~HITrackCorrectionAnalyzer();
 
       static bool vtxSort( const reco::Vertex &  a, const reco::Vertex & b );
 
@@ -91,7 +91,7 @@ class SimpleTrackingCorrections : public edm::EDAnalyzer {
 
 };
 
-SimpleTrackingCorrections::SimpleTrackingCorrections(const edm::ParameterSet& iConfig):
+HITrackCorrectionAnalyzer::HITrackCorrectionAnalyzer(const edm::ParameterSet& iConfig):
 treeHelper_(),
 vertexSrc_(iConfig.getParameter<edm::InputTag>("vertexSrc")),
 trackSrc_(iConfig.getParameter<edm::InputTag>("trackSrc")),
@@ -133,13 +133,13 @@ fillNTuples_(iConfig.getParameter<bool>("fillNTuples"))
    }
 }
 
-SimpleTrackingCorrections::~SimpleTrackingCorrections()
+HITrackCorrectionAnalyzer::~HITrackCorrectionAnalyzer()
 {
    delete vtxWeightFunc_;
 }
 
 void
-SimpleTrackingCorrections::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+HITrackCorrectionAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
    using namespace edm;
 
@@ -168,7 +168,7 @@ SimpleTrackingCorrections::analyze(const edm::Event& iEvent, const edm::EventSet
   
    // sort the vertcies by number of tracks in descending order
    std::vector<reco::Vertex> vsorted = *vertex;
-   std::sort( vsorted.begin(), vsorted.end(), SimpleTrackingCorrections::vtxSort );
+   std::sort( vsorted.begin(), vsorted.end(), HITrackCorrectionAnalyzer::vtxSort );
 
    // skip events with no PV, this should not happen
    if( vsorted.size() == 0) return;
@@ -267,7 +267,7 @@ SimpleTrackingCorrections::analyze(const edm::Event& iEvent, const edm::EventSet
 }
 
 bool
-SimpleTrackingCorrections::passesTrackCuts(const reco::Track & track, const reco::Vertex & vertex)
+HITrackCorrectionAnalyzer::passesTrackCuts(const reco::Track & track, const reco::Vertex & vertex)
 {
    if ( ! applyTrackCuts_ ) return true;
 
@@ -295,7 +295,7 @@ SimpleTrackingCorrections::passesTrackCuts(const reco::Track & track, const reco
 
 
 void
-SimpleTrackingCorrections::initHistos(const edm::Service<TFileService> & fs)
+HITrackCorrectionAnalyzer::initHistos(const edm::Service<TFileService> & fs)
 {
 
 
@@ -329,7 +329,7 @@ SimpleTrackingCorrections::initHistos(const edm::Service<TFileService> & fs)
 }
 
 bool
-SimpleTrackingCorrections::vtxSort( const reco::Vertex &  a, const reco::Vertex & b )
+HITrackCorrectionAnalyzer::vtxSort( const reco::Vertex &  a, const reco::Vertex & b )
 {
   if( a.tracksSize() != b.tracksSize() )
     return  a.tracksSize() > b.tracksSize() ? true : false ;
@@ -338,13 +338,13 @@ SimpleTrackingCorrections::vtxSort( const reco::Vertex &  a, const reco::Vertex 
 }
 
 void
-SimpleTrackingCorrections::beginJob()
+HITrackCorrectionAnalyzer::beginJob()
 {
 }
 
 void
-SimpleTrackingCorrections::endJob()
+HITrackCorrectionAnalyzer::endJob()
 {
 }
 
-DEFINE_FWK_MODULE(SimpleTrackingCorrections);
+DEFINE_FWK_MODULE(HITrackCorrectionAnalyzer);

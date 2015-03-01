@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
 
-SimpleTrkCorr  = cms.EDAnalyzer('SimpleTrackingCorrections',
+HITrackCorrections = cms.EDAnalyzer('HITrackCorrectionAnalyzer',
     trackSrc = cms.InputTag("hiGeneralTracks"),
     vertexSrc = cms.InputTag("hiSelectedVertex"),
     tpEffSrc = cms.InputTag('mix','MergedTrackTruth'),
