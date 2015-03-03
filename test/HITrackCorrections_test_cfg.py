@@ -40,11 +40,31 @@ process.source = cms.Source("PoolSource",
 )
 
 
+#centrality
+process.load("RecoHI.HiCentralityAlgos.CentralityBin_cfi") 
+process.centralityBin.Centrality = cms.InputTag("hiCentrality")
+process.centralityBin.centralityVariable = cms.string("HFtowers")
+process.centralityBin.nonDefaultGlauberModel = cms.string("HydjetDrum5")
+process.GlobalTag.toGet.extend([
+   cms.PSet(record = cms.string("HeavyIonRcd"),
+      tag = cms.string("CentralityTable_HFtowers200_HydjetDrum5_v740x01_mc"),
+      connect = cms.untracked.string("frontier://FrontierProd/CMS_COND_31X_PHYSICSTOOLS"),
+      label = cms.untracked.string("HFtowersHydjetDrum5")
+   ),
+])
+process.HITrackCorrections.useCentrality = True
+process.HITrackCorrections.centralitySrc = cms.InputTag("centralityBin","HFtowers")
+
+
+process.HITrackCorrections.applyTrackCuts = False
+process.HITrackCorrections.fillNTuples = True
+
 process.GlobalTag.globaltag = 'MCHI2_74_V0::All'
 
 process.p = cms.Path( 
                       process.tpClusterProducer *
                       process.quickTrackAssociatorByHits *
                       process.tpRecoAssocGeneralTracks *
+                      process.centralityBin *
                       process.HITrackCorrections
 )

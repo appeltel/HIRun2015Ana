@@ -91,6 +91,9 @@ class HITrackCorrectionAnalyzer : public edm::EDAnalyzer {
 
       bool fillNTuples_;
 
+      bool useCentrality_;
+      edm::EDGetTokenT<int> centralitySrc_;
+
 };
 
 HITrackCorrectionAnalyzer::HITrackCorrectionAnalyzer(const edm::ParameterSet& iConfig):
@@ -113,7 +116,9 @@ dxyErrMax_(iConfig.getParameter<double>("dzErrMax")),
 dzErrMax_(iConfig.getParameter<double>("dzErrMax")),
 ptErrMax_(iConfig.getParameter<double>("ptErrMax")),
 doMomRes_(iConfig.getParameter<bool>("doMomRes")),
-fillNTuples_(iConfig.getParameter<bool>("fillNTuples"))
+fillNTuples_(iConfig.getParameter<bool>("fillNTuples")),
+useCentrality_(iConfig.getParameter<bool>("useCentrality")),
+centralitySrc_(consumes<int>(iConfig.getParameter<edm::InputTag>("centralitySrc")))
 {
    edm::Service<TFileService> fs;
    initHistos(fs);
@@ -189,7 +194,7 @@ HITrackCorrectionAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
 
    vtxZ_->Fill(vsorted[0].z(),w);
 
-   // determine event multipliticy 
+   // determine event multipliticy
    int multiplicity =0;
    for(edm::View<reco::Track>::size_type i=0; i<tcol->size(); ++i){
      edm::RefToBase<reco::Track> track(tcol, i);
@@ -198,6 +203,16 @@ HITrackCorrectionAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
        multiplicity++;
    }
 
+   // determine centrality if set
+   // note if there is no centrality information multiplicity 
+   // will be used in place of the centrality
+   int cbin = multiplicity;
+   if( useCentrality_ )
+   {
+     edm::Handle<int> centralityBin;
+     iEvent.getByToken(centralitySrc_, centralityBin);
+     cbin = *centralityBin;
+   } 
 
    // ---------------------
    // loop through reco tracks to fill fake, reco, and secondary histograms
@@ -218,7 +233,7 @@ HITrackCorrectionAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
      {
        tp = recSimColl[track];
        mtp = tp.begin()->first.get();  
-       if( fillNTuples_) treeHelper_.Set(*mtp, *tr, vsorted[0], tp.size(),  multiplicity); 
+       if( fillNTuples_) treeHelper_.Set(*mtp, *tr, vsorted[0], tp.size(), cbin); 
        if( mtp->status() < 0 ) 
        {
          trkCorr2D_["hsec"]->Fill(tr->eta(), tr->pt(), w);     
@@ -226,7 +241,7 @@ HITrackCorrectionAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
      }
      else
      {
-       if( fillNTuples_) treeHelper_.Set(*tr, vsorted[0], multiplicity); 
+       if( fillNTuples_) treeHelper_.Set(*tr, vsorted[0], cbin); 
        trkCorr2D_["hfak"]->Fill(tr->eta(), tr->pt(), w);
      }
      if( fillNTuples_) trkTree_["rec"]->Fill(); 
@@ -259,9 +274,9 @@ HITrackCorrectionAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
          nrec++;
          if( doMomRes_ ) momRes_->Fill( tp->eta(), tp->pt(), tmtr->pt(), w);
        }
-       if( nrec>0 && fillNTuples_ ) treeHelper_.Set(*tp, *(rt.begin()->first.get()), vsorted[0], rt.size(),  multiplicity);
-       if( nrec==0 && fillNTuples_ ) treeHelper_.Set(*tp, multiplicity);
      }
+     if( nrec>0 && fillNTuples_ ) treeHelper_.Set(*tp, *(rt.begin()->first.get()), vsorted[0], rt.size(), cbin);
+     if( nrec==0 && fillNTuples_ ) treeHelper_.Set(*tp, cbin);
      if(nrec>0) trkCorr2D_["heff"]->Fill(tp->eta(),tp->pt(), w);
      if(nrec>1) trkCorr2D_["hmul"]->Fill(tp->eta(),tp->pt(), w);
      if( fillNTuples_) trkTree_["sim"]->Fill(); 
