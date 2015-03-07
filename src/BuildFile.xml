@@ -6,6 +6,10 @@
 <use name="CommonTools/UtilAlgos"/>
 <use name="DataFormats/TrackReco"/>
 <use name="DataFormats/VertexReco"/>
+<use name="DataFormats/TrackingRecHit"/>
+<use name="DataFormats/TrackerRecHit2D"/>
+<use name="DataFormats/SiStripDetId"/>
+<use name="DataFormats/SiPixelDetId"/>
 <use name="SimTracker/Records"/>
 <use name="SimTracker/TrackAssociation"/>
 <use name="CLHEP"/>

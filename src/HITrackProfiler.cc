@@ -37,6 +37,24 @@
 #include "DataFormats/RecoCandidate/interface/TrackAssociation.h"
 #include "SimTracker/TrackAssociation/interface/TrackAssociatorByHits.h"
 
+#include "DataFormats/TrackingRecHit/interface/RecHit2DLocalPos.h"
+#include "DataFormats/TrackingRecHit/interface/RecSegment.h"
+#include "DataFormats/TrackerRecHit2D/interface/SiStripRecHit2D.h"
+#include "DataFormats/TrackerRecHit2D/interface/SiStripRecHit1D.h"
+#include "DataFormats/TrackerRecHit2D/interface/SiPixelRecHit.h"
+#include "DataFormats/SiStripDetId/interface/StripSubdetector.h"
+#include "DataFormats/SiStripDetId/interface/SiStripDetId.h"
+#include "DataFormats/SiStripDetId/interface/TIDDetId.h"
+#include "DataFormats/SiStripDetId/interface/TECDetId.h"
+#include "DataFormats/SiStripDetId/interface/TIBDetId.h"
+#include "DataFormats/SiStripDetId/interface/TOBDetId.h"
+#include "DataFormats/SiPixelDetId/interface/PXBDetId.h"
+#include "DataFormats/SiPixelDetId/interface/PXFDetId.h"
+#include "DataFormats/SiPixelDetId/interface/PixelSubdetector.h"
+//#include "DataFormats/SiPixelCluster/interface/SiPixelCluster.h"
+
+
+
 #include "Appeltel/HIRun2015Ana/interface/HITrackCorrectionTreeHelper.h"
 
 class HITrackProfiler : public edm::EDAnalyzer {
@@ -241,6 +259,36 @@ HITrackProfiler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
      if(tr->isLooper() == true ) std::cout << "This track is a LOOPER" << std::endl;  
        std::cout << "number of hits = " << tr->numberOfValidHits() << std::endl;
 
+     int rhcount = 0;
+     for( auto rechit = tr->recHitsBegin(); rechit != tr->recHitsEnd(); ++rechit ) 
+     {
+       if( (*rechit)->isValid() ) 
+       {
+         rhcount++;
+         std::cout << "    Rechit # " << rhcount 
+                   << " rawId = " << (*rechit)->rawId(); 
+ 
+         int type =(*rechit)->geographicalId().subdetId();
+         if(type==int(StripSubdetector::TIB)) std::cout << " TIB "; 
+         if(type==int(StripSubdetector::TOB)) std::cout << " TOB "; 
+         if(type==int(StripSubdetector::TID)) std::cout << " TID "; 
+         if(type==int(StripSubdetector::TEC)) std::cout << " TEC "; 
+         if(type==int(PixelSubdetector::PixelBarrel))
+         {
+           PXBDetId idid = PXBDetId( (*rechit)->rawId() );
+           std::cout << " BPIX" << idid.layer() << " ";
+         }
+         if(type==int(PixelSubdetector::PixelEndcap)) 
+         {
+           PXFDetId idid = PXFDetId( (*rechit)->rawId() );
+           std::cout << " FPIX" << idid.disk() << " ";
+         }
+
+
+         std::cout  << std::endl;
+       }
+     }
+
      if(recSimColl.find(track) != recSimColl.end())
      {
        tp = recSimColl[track];
@@ -252,9 +300,12 @@ HITrackProfiler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
          auto vtp = vtpp.first.get();
          std::cout << "  associated to TP ( "
                    << vtp->pt() << " , " << vtp->eta() << " , "
-                  << vtp->phi() << " ) " 
+                  << vtp->phi() << " ) "  
                   << " nLayers = " << vtp->numberOfTrackerLayers() <<  std::endl;
-
+         std::cout << "  pdgId = " << vtp->pdgId() 
+                   << " , status = " << vtp->status() 
+                   << " , vertex rho = " << sqrt( vtp->vx()*vtp->vx() + vtp->vy()*vtp->vy() )
+                   << std::endl;         
          std::cout << "  with quality " << vtpp.second << std::endl;
        }
        if( mtp->status() < 0 ) 

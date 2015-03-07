@@ -38,7 +38,8 @@ process.load("SimTracker.TrackerHitAssociation.clusterTpAssociationProducer_cfi"
 process.source = cms.Source("PoolSource",
     duplicateCheckMode = cms.untracked.string("noDuplicateCheck"),
     fileNames =  cms.untracked.vstring(
-'/store/user/mnguyen/PyquenUnquenched_Dijet_pthat80_740pre6_GEN-SIM/PyquenUnquenched_Dijet_pthat80_740pre6_MCHI2_74_V0_RECO/35189fe3832afd77f4f2029b245352e2/step3_RAW2DIGI_L1Reco_RECO_100_1_0f3.root'
+#'/store/user/mnguyen/PyquenUnquenched_Dijet_pthat80_740pre6_GEN-SIM/PyquenUnquenched_Dijet_pthat80_740pre8_MCHI2_74_V0_RECO/5e9447e73d909a826044ea40afa73dc6/step3_RAW2DIGI_L1Reco_RECO_100_1_nLj.root'
+'file:/scratch/appelte1/step3_RAW2DIGI_L1Reco_RECO_100_1_nLj.root'
     )
 )
 
