@@ -284,6 +284,47 @@ HITrackProfiler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
            std::cout << " FPIX" << idid.disk() << " ";
          }
 
+         const TransientTrackingRecHit & hit = (**rechit);
+         if( hit.surface() != nullptr && hit.isValid() )
+         {
+           std::cout << " , Global: R = " << hit.globalPosition().perp()
+                     << " z = " << hit.globalPosition().z() 
+                     << " phi = " << hit.globalPosition().phi(); 
+           std::cout << " , Local: x = " << hit.localPosition().x()
+                     << " , y = " << hit.localPosition().y();
+
+
+           const SiPixelRecHit* pixelRecHit = dynamic_cast<const SiPixelRecHit *>( *rechit );
+           if( pixelRecHit != 0 )
+           {
+             std::cout << std::endl << "      Pixel Cluster"
+                       << " nPix = " << pixelRecHit->cluster()->size()
+                       << " sizeX = " << pixelRecHit->cluster()->sizeX()  
+                       << " sizeY = " << pixelRecHit->cluster()->sizeY()
+                       << " charge = " << pixelRecHit->cluster()->charge();
+           }
+           const SiStripRecHit1D* stripRecHit1D = dynamic_cast<const SiStripRecHit1D *>( *rechit );
+           if ( stripRecHit1D != 0)
+           {
+             std::cout << std::endl << "      Strip Cluster 1D"
+                       << " charge = " << stripRecHit1D->cluster()->charge()
+                       << " firstStrip = " << stripRecHit1D->cluster()->firstStrip();
+             std::cout << std::endl << "      ADC: ";
+             for( const auto & adc : stripRecHit1D->cluster()->amplitudes() )
+               std::cout << (int)adc << " ";
+           } 
+           const SiStripRecHit2D* stripRecHit2D = dynamic_cast<const SiStripRecHit2D *>( *rechit );
+           if ( stripRecHit2D != 0)
+           {
+             std::cout << std::endl << "      Strip Cluster 2D"
+                       << " charge = " << stripRecHit2D->cluster()->charge()
+                       << " firstStrip = " << stripRecHit2D->cluster()->firstStrip();
+             std::cout << std::endl << "      ADC: ";
+             for( const auto & adc : stripRecHit2D->cluster()->amplitudes() )
+               std::cout << (int)adc << " ";
+           } 
+      
+         }
 
          std::cout  << std::endl;
        }
