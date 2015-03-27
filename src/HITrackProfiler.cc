@@ -75,7 +75,8 @@ class HITrackProfiler : public edm::EDAnalyzer {
 
 
       std::map<std::string,TTree*> trkTree_;
-      std::map<std::string,TH2F*> trkCorr2D_;
+      std::map<std::string,TH2F*> trkCorr2D_; 
+      TTree * recHitTree_;
       TH3F * momRes_;
       TH1F * vtxZ_;
       TF1 * vtxWeightFunc_;
@@ -156,6 +157,8 @@ centralitySrc_(consumes<int>(iConfig.getParameter<edm::InputTag>("centralitySrc"
      trkTree_["rec"]->Branch("recValues",&treeHelper_.b,treeHelper_.hiTrackLeafString.Data());
      trkTree_["sim"] = fs->make<TTree>("simTree","simTree");
      trkTree_["sim"]->Branch("simValues",&treeHelper_.b,treeHelper_.hiTrackLeafString.Data());
+	   recHitTree_ = fs->make<TTree>("recHitTree","recHitTree");
+	   treeHelper_.SetRecHitTree(recHitTree_);
    }
 }
 
@@ -359,7 +362,11 @@ HITrackProfiler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
        if( fillNTuples_) treeHelper_.Set(*tr, vsorted[0], cbin); 
        trkCorr2D_["hfak"]->Fill(tr->eta(), tr->pt(), w);
      }
-     if( fillNTuples_) trkTree_["rec"]->Fill(); 
+     if( fillNTuples_)
+     {
+       trkTree_["rec"]->Fill(); 
+       recHitTree_->Fill(); 
+     }
      std::cout << std::endl;
    }
 
