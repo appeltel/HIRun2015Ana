@@ -23,6 +23,7 @@
 #include <TH3.h>
 #include <TF1.h>
 #include <TTree.h>
+#include <TLorentzVector.h>
 
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
@@ -333,8 +334,10 @@ HITrackProfiler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
              std::vector<PSimHit> simHits = theHitAssociator->associateHit(**rechit);
 		     std::cout << "size of simhits = " << simHits.size() << std::endl;
              for (unsigned int hitIter = 0 ; hitIter < simHits.size(); ++hitIter){
-               std::cout << "sim hit detunitid = " << simHits[hitIter].detUnitId() << std::endl;
-               std::cout << "sim hit trackid = " << simHits[hitIter].trackId() << std::endl;
+               std::cout << "sim hit detunitId = " << simHits[hitIter].detUnitId();
+               std::cout << " trackId = " << simHits[hitIter].trackId();
+               std::cout << " eventId = " << (int) simHits[hitIter].eventId().event() << std::endl;
+			   std::cout << std::endl;
              }
          
              std::cout  << std::endl;
@@ -387,12 +390,13 @@ HITrackProfiler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
    // ---------------------
    // loop through sim particles to fill matched, multiple,  and sim histograms 
    // ---------------------
-
+   
+   std::cout << "Number of tracking particles = " << TPCollectionHeff->size() << std::endl;
    for(TrackingParticleCollection::size_type i=0; i<TPCollectionHeff->size(); i++) 
    {      
      TrackingParticleRef tpr(TPCollectionHeff, i);
      TrackingParticle* tp=const_cast<TrackingParticle*>(tpr.get());
-         
+     cout << "Tracking particle (pt, eta, phi) = "<< tp->pt() << " , " << tp->eta() << " , " << tp->phi() << endl;  
      if(tp->pt() < 5.0 || fabs(tp->eta()) > 2.4 || tp->charge()==0) continue; //only charged primaries
      
      //std::cout << *tp ;
@@ -433,7 +437,12 @@ HITrackProfiler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
      
      for( auto simtrack = tp->g4Track_begin(); simtrack != tp->g4Track_end(); ++simtrack )
      {
-       std::cout << "sim track momentum=" << simtrack->momentum() << std::endl;
+	   TLorentzVector * vsimtrack = new TLorentzVector(simtrack->momentum().x(), simtrack->momentum().y(), simtrack->momentum().z(), simtrack->momentum().t());
+       std::cout << "sim track momentum (4-vector) = " << simtrack->momentum() << " , "
+                 << "trackID = " << simtrack->trackId() << " , "
+	             <<  "( pt, eta, phi ) = " << vsimtrack->Pt() << " , "
+	             << vsimtrack->Eta() << " , "
+	             << vsimtrack->Phi() << std::endl;
      }
 
    }
