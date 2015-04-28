@@ -35,7 +35,6 @@
 #include "SimDataFormats/TrackingAnalysis/interface/TrackingParticleFwd.h"
 #include "SimTracker/Records/interface/TrackAssociatorRecord.h"
 #include "DataFormats/RecoCandidate/interface/TrackAssociation.h"
-#include "SimTracker/TrackAssociation/interface/TrackAssociatorByHits.h"
 
 #include "Appeltel/HIRun2015Ana/interface/HITrackCorrectionTreeHelper.h"
 

@@ -35,7 +35,6 @@
 #include "SimDataFormats/TrackingAnalysis/interface/TrackingParticleFwd.h"
 #include "SimTracker/Records/interface/TrackAssociatorRecord.h"
 #include "DataFormats/RecoCandidate/interface/TrackAssociation.h"
-#include "SimTracker/TrackAssociation/interface/TrackAssociatorByHits.h"
 
 #include "DataFormats/TrackingRecHit/interface/RecHit2DLocalPos.h"
 #include "DataFormats/TrackingRecHit/interface/RecSegment.h"
@@ -52,7 +51,7 @@
 #include "DataFormats/SiPixelDetId/interface/PXFDetId.h"
 #include "DataFormats/SiPixelDetId/interface/PixelSubdetector.h"
 //#include "DataFormats/SiPixelCluster/interface/SiPixelCluster.h"
-
+#include "DataFormats/TrackingRecHit/interface/TrackingRecHit.h"
 
 
 #include "Appeltel/HIRun2015Ana/interface/HITrackCorrectionTreeHelper.h"
@@ -284,7 +283,7 @@ HITrackProfiler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
            std::cout << " FPIX" << idid.disk() << " ";
          }
 
-         const TransientTrackingRecHit & hit = (**rechit);
+         const TrackingRecHit & hit = (**rechit);
          if( hit.surface() != nullptr && hit.isValid() )
          {
            std::cout << " , Global: R = " << hit.globalPosition().perp()
