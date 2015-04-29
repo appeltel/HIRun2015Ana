@@ -27,7 +27,6 @@
 #include "FWCore/Utilities/interface/EDGetToken.h"
 
 #include <DataFormats/HeavyIonEvent/interface/ClusterCompatibility.h>
-#include <DataFormats/HeavyIonEvent/interface/Centrality.h>
 
 
 class HIClusterCompatibilityFilter : public edm::EDFilter {
@@ -44,8 +43,7 @@ class HIClusterCompatibilityFilter : public edm::EDFilter {
     virtual bool filter(edm::Event&, const edm::EventSetup&) override;
     virtual void endJob() override;
 
-    edm::EDGetTokenT<reco::Centrality> centSrc_;
-    edm::EDGetTokenT<reco::ClusterCompatibilityCollection> cluscomSrc_;
+    edm::EDGetTokenT<reco::ClusterCompatibility> cluscomSrc_;
   
     double              minZ_;          // beginning z-vertex position
     double              maxZ_;          // end z-vertex position
@@ -56,8 +54,7 @@ class HIClusterCompatibilityFilter : public edm::EDFilter {
 };
 
 HIClusterCompatibilityFilter::HIClusterCompatibilityFilter(const edm::ParameterSet& iConfig):
-centSrc_(consumes<reco::Centrality>(iConfig.getParameter<edm::InputTag>("centSrc"))),
-cluscomSrc_(consumes<reco::ClusterCompatibilityCollection>(iConfig.getParameter<edm::InputTag>("cluscomSrc"))),
+cluscomSrc_(consumes<reco::ClusterCompatibility>(iConfig.getParameter<edm::InputTag>("cluscomSrc"))),
 minZ_(iConfig.getParameter<double>("minZ")),
 maxZ_(iConfig.getParameter<double>("maxZ")),
 clusterPars_(iConfig.getParameter< std::vector<double> >("clusterPars")),
@@ -74,19 +71,17 @@ HIClusterCompatibilityFilter::filter(edm::Event& iEvent, const edm::EventSetup& 
 
   bool accept = true;
 
-  // obtain centrality object
-  Handle<reco::Centrality> cent;
-  iEvent.getByToken(centSrc_, cent);
-  double nPxlHits = cent->NValidPixelClusters();
 
   // obtain cluster compatibility scores
-  Handle<reco::ClusterCompatibilityCollection> ccc;
-  iEvent.getByToken(cluscomSrc_, ccc);
+  Handle<reco::ClusterCompatibility> cc;
+  iEvent.getByToken(cluscomSrc_, cc);
+  double nPxlHits = cc->nValidPixelHits();
 
 
   // will compare cluster compatibility at a determined best 
   // z position to + and - 10 cm from the best position
-  reco::ClusterCompatibility best,low,high;
+  float best_z = 0.,low_z = 0.,high_z = 0.;
+  int best_n= 0.,low_n = 0.,high_n = 0.;
 
 
   // look for best vertex z position within zMin to zMax range
@@ -94,44 +89,44 @@ HIClusterCompatibilityFilter::filter(edm::Event& iEvent, const edm::EventSetup& 
   // chi used for breaking a tie
   int nhits_max = 0;
   double chi_max = 1e+9;
-  for( const auto & cc : *ccc )
+  for( int i=0; i<cc->size(); i++ )
   {
-    if( cc.z0() > maxZ_ || cc.z0() < minZ_ ) continue;
-    if(cc.nHit() == 0) continue;
-    if(cc.nHit() > nhits_max) {
+    if( cc->z0(i) > maxZ_ || cc->z0(i) < minZ_ ) continue;
+    if(cc->nHit(i) == 0) continue;
+    if(cc->nHit(i) > nhits_max) {
       chi_max = 1e+9;
-      nhits_max = cc.nHit();
+      nhits_max = cc->nHit(i);
     }
-    if(cc.nHit() >= nhits_max && cc.chi() < chi_max) {
-      chi_max = cc.chi();
-      best = cc;
+    if(cc->nHit(i) >= nhits_max && cc->chi(i) < chi_max) {
+      chi_max = cc->chi(i);
+      best_z = cc->z0(i); best_n = cc->nHit(i);
     }
   }
 
-  // find ClusterCompatibility objects at + or - 10 cm of the best, 
-  // or get as close as possible.
-  double low_target = best.z0() - 10.0;
-  double high_target = best.z0() + 10.0;
+  // find compatible clusters at + or - 10 cm of the best, 
+  // or get as close as possible in terms of z position.
+  double low_target = best_z - 10.0;
+  double high_target = best_z + 10.0;
   double low_match = 1000., high_match = 1000.;
-  for( const auto & cc : *ccc )
+  for( int i=0; i<cc->size(); i++ )
   {  
-    if( fabs(cc.z0()-low_target) < low_match )
+    if( fabs(cc->z0(i)-low_target) < low_match )
     {
-       low = cc;
-       low_match = fabs(cc.z0()-low_target);
+       low_z = cc->z0(i); low_n = cc->nHit(i); 
+       low_match = fabs(cc->z0(i)-low_target);
     }
-    if( fabs(cc.z0()-high_target) < high_match )
+    if( fabs(cc->z0(i)-high_target) < high_match )
     {
-       high = cc;
-       high_match = fabs(cc.z0()-high_target);
+       high_z = cc->z0(i); high_n = cc->nHit(i); 
+       high_match = fabs(cc->z0(i)-high_target);
     }
   }
 
   // determine vertex compatibility quality score
   double clusVtxQual=0.0;
-  if ((low.nHit()+high.nHit())> 0)
-    clusVtxQual = (2.0*best.nHit())/(low.nHit()+high.nHit());  // A/B
-  else if (best.nHit() > 0)
+  if ((low_n+high_n)> 0)
+    clusVtxQual = (2.0*best_n)/(low_n+high_n);  // A/B
+  else if (best_n > 0)
     clusVtxQual = 1000.0;                      // A/0 (set to arbitrarily large number)
   else
     clusVtxQual = 0;   
@@ -148,9 +143,9 @@ HIClusterCompatibilityFilter::filter(edm::Event& iEvent, const edm::EventSetup& 
 
   if (clusVtxQual < polyCut) accept = false;
 
-  //std::cout << "HIClusterCompatibilityFilter: low at z=" << low.z0() << " high at z=" << high.z0() << std::endl;
-  //std::cout << "HIClusterCompatibilityFilter: best at z=" << best.z0() << " with nHit=" << best.nHit() 
-  //          << " quality is " << clusVtxQual << " nPixel=" << nPxlHits << " polycut =" << polyCut << " decision=" << accept << std::endl;
+  std::cout << "HIClusterCompatibilityFilter: low at z=" << low_z << " high at z=" << high_z << std::endl;
+  std::cout << "HIClusterCompatibilityFilter: best at z=" << best_z << " with nHit=" << best_n 
+            << " quality is " << clusVtxQual << " nPixel=" << nPxlHits << " polycut =" << polyCut << " decision=" << accept << std::endl;
 
   // return with final filter decision
   return accept;

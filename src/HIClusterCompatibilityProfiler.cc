@@ -44,7 +44,7 @@ class HIClusterCompatibilityProfiler : public edm::EDAnalyzer {
     virtual void endJob() ;
 
     edm::EDGetTokenT<reco::VertexCollection> vertexSrc_;
-    edm::EDGetTokenT<reco::ClusterCompatibilityCollection> cluscomSrc_;
+    edm::EDGetTokenT<reco::ClusterCompatibility> cluscomSrc_;
 
     int eventCount_;
 
@@ -54,7 +54,7 @@ class HIClusterCompatibilityProfiler : public edm::EDAnalyzer {
 
 HIClusterCompatibilityProfiler::HIClusterCompatibilityProfiler(const edm::ParameterSet& iConfig):
 vertexSrc_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertexSrc"))),
-cluscomSrc_(consumes<reco::ClusterCompatibilityCollection>(iConfig.getParameter<edm::InputTag>("cluscomSrc"))),
+cluscomSrc_(consumes<reco::ClusterCompatibility>(iConfig.getParameter<edm::InputTag>("cluscomSrc"))),
 eventCount_(0)
 {
   edm::Service<TFileService> fs;
@@ -87,8 +87,8 @@ HIClusterCompatibilityProfiler::analyze(const edm::Event& iEvent, const edm::Eve
   iEvent.getByToken(vertexSrc_, vertexCol);
 
   // obtain cluster compatibility scores
-  Handle<reco::ClusterCompatibilityCollection> ccc;
-  iEvent.getByToken(cluscomSrc_, ccc);
+  Handle<reco::ClusterCompatibility> cc;
+  iEvent.getByToken(cluscomSrc_, cc);
 
   std::string vtx(Form("vtxz%d",eventCount_));
   std::string ccs(Form("ccc%d",eventCount_));
@@ -103,9 +103,9 @@ HIClusterCompatibilityProfiler::analyze(const edm::Event& iEvent, const edm::Eve
   }
 
   i=0;
-  for( const auto & cc : *ccc )
+  for( int i=0; i<cc->size(); i++ )
   {
-    histos_[ccs]->SetPoint(i, cc.z0(),  cc.nHit());
+    histos_[ccs]->SetPoint(i, cc->z0(i),  cc->nHit(i));
     //std::cout << "  cc z0 = " << cc.z0() << " nHit = " << cc.nHit() << " chi = " << cc.chi() << std::endl;
     i++;
   }
