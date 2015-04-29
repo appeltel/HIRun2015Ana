@@ -143,9 +143,9 @@ HIClusterCompatibilityFilter::filter(edm::Event& iEvent, const edm::EventSetup& 
 
   if (clusVtxQual < polyCut) accept = false;
 
-  std::cout << "HIClusterCompatibilityFilter: low at z=" << low_z << " high at z=" << high_z << std::endl;
-  std::cout << "HIClusterCompatibilityFilter: best at z=" << best_z << " with nHit=" << best_n 
-            << " quality is " << clusVtxQual << " nPixel=" << nPxlHits << " polycut =" << polyCut << " decision=" << accept << std::endl;
+//  std::cout << "HIClusterCompatibilityFilter: low at z=" << low_z << " high at z=" << high_z << std::endl;
+//  std::cout << "HIClusterCompatibilityFilter: best at z=" << best_z << " with nHit=" << best_n 
+//            << " quality is " << clusVtxQual << " nPixel=" << nPxlHits << " polycut =" << polyCut << " decision=" << accept << std::endl;
 
   // return with final filter decision
   return accept;
