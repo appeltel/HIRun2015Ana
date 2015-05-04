@@ -4,12 +4,6 @@
 //
 //
 
-
-// Don't compile this by default. Comment below to build this 
-// analyzer
-#define DONT_COMPILE_THIS
-#ifndef DONT_COMPILE_THIS
-
 #include <iostream>
 
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -30,7 +24,11 @@
 
 #include <DataFormats/HeavyIonEvent/interface/ClusterCompatibility.h>
 
+#include "Appeltel/HIRun2015Ana/interface/HIClusterCompatibilityFilter.h"
+
 #include "TGraph.h"
+#include "TH1.h"
+#include "TH2.h"
 #include "TString.h"
 
 class HIClusterCompatibilityProfiler : public edm::EDAnalyzer {
@@ -48,7 +46,8 @@ class HIClusterCompatibilityProfiler : public edm::EDAnalyzer {
 
     int eventCount_;
 
-    std::map<std::string,TGraph*> histos_;
+    std::map<std::string,TGraph*> graphs_;
+    std::map<std::string,TH2F*> histos2d_;
   
 };
 
@@ -63,12 +62,21 @@ eventCount_(0)
   for( int i=0; i<20; i++)
   {
     std::string vtx(Form("vtxz%d",i));
+    std::string pxl(Form("npxl%d",i));
     std::string ccs(Form("ccc%d",i));
-    histos_[ccs] = fs->make<TGraph>(1000);
-    histos_[ccs]->SetName(ccs.c_str());
-    histos_[vtx] = fs->make<TGraph>(1);
-    histos_[vtx]->SetName(vtx.c_str());
+    graphs_[ccs] = fs->make<TGraph>(1000);
+    graphs_[ccs]->SetName(ccs.c_str());
+    graphs_[vtx] = fs->make<TGraph>(1);
+    graphs_[vtx]->SetName(vtx.c_str());
+    graphs_[pxl] = fs->make<TGraph>(1);
+    graphs_[pxl]->SetName(pxl.c_str());
   }
+  histos2d_["qual_hits"] = fs->make<TH2F>(
+      "qual_hits",";# of pixel hits;Cluster-Vertex Compatibility",
+      50, 0., 80000., 50, 0, 10);
+   histos2d_["qual_hits_close"] = fs->make<TH2F>(
+      "qual_hits_close",";# of pixel hits;Cluster-Vertex Compatibility",
+      50, 0., 2000., 50, 0, 10);
 
 }
 
@@ -78,7 +86,6 @@ void
 HIClusterCompatibilityProfiler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
 
-   if ( eventCount_ >= 20 ) return;
 
    using namespace edm;
 
@@ -90,24 +97,33 @@ HIClusterCompatibilityProfiler::analyze(const edm::Event& iEvent, const edm::Eve
   Handle<reco::ClusterCompatibility> cc;
   iEvent.getByToken(cluscomSrc_, cc);
 
-  std::string vtx(Form("vtxz%d",eventCount_));
-  std::string ccs(Form("ccc%d",eventCount_));
+  double nPxlHits = cc->nValidPixelHits();
+  double clusVtxQual = HIClusterCompatibilityFilter::determineQuality(*cc,-20.,20.5);
 
+  histos2d_["qual_hits"]->Fill(nPxlHits,clusVtxQual);
+  histos2d_["qual_hits_close"]->Fill(nPxlHits,clusVtxQual);
+
+
+  // Show some plots scanning z-axis for first 20 events
+  if ( eventCount_ >= 20 ) return;
+
+  std::string vtx(Form("vtxz%d",eventCount_));
+  std::string pxl(Form("npxl%d",eventCount_));
+  std::string ccs(Form("ccc%d",eventCount_));
 
   int i=0;
   for( const auto & vertex : *vertexCol)
   {
-    if (i < 1) histos_[vtx]->SetPoint(0, vertex.z(), 1);
+    if (i < 1) graphs_[vtx]->SetPoint(0, vertex.z(), 1);
     //std::cout << "Primary Vertex at z = " << vertex.z() << std::endl;
     i++;
   }
 
-  i=0;
-  for( int i=0; i<cc->size(); i++ )
+  graphs_[pxl]->SetPoint(0,cc->nValidPixelHits(), 1);
+  for( i=0; i<cc->size(); i++ )
   {
-    histos_[ccs]->SetPoint(i, cc->z0(i),  cc->nHit(i));
+    graphs_[ccs]->SetPoint(i, cc->z0(i),  cc->nHit(i));
     //std::cout << "  cc z0 = " << cc.z0() << " nHit = " << cc.nHit() << " chi = " << cc.chi() << std::endl;
-    i++;
   }
 
   eventCount_++;
@@ -125,5 +141,3 @@ HIClusterCompatibilityProfiler::endJob()
 }
 
 DEFINE_FWK_MODULE(HIClusterCompatibilityProfiler);
-
-#endif
