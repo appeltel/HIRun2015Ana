@@ -23,6 +23,7 @@
 #include <TH3.h>
 #include <TF1.h>
 #include <TTree.h>
+#include <TLorentzVector.h>
 
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
@@ -35,6 +36,7 @@
 #include "SimDataFormats/TrackingAnalysis/interface/TrackingParticleFwd.h"
 #include "SimTracker/Records/interface/TrackAssociatorRecord.h"
 #include "DataFormats/RecoCandidate/interface/TrackAssociation.h"
+#include "SimTracker/TrackerHitAssociation/interface/TrackerHitAssociator.h"
 
 #include "DataFormats/TrackingRecHit/interface/RecHit2DLocalPos.h"
 #include "DataFormats/TrackingRecHit/interface/RecSegment.h"
@@ -74,12 +76,14 @@ class HITrackProfiler : public edm::EDAnalyzer {
 
 
       std::map<std::string,TTree*> trkTree_;
-      std::map<std::string,TH2F*> trkCorr2D_;
+      std::map<std::string,TH2F*> trkCorr2D_; 
+      TTree * recHitTree_;
       TH3F * momRes_;
       TH1F * vtxZ_;
       TF1 * vtxWeightFunc_;
 
       HITrackCorrectionTreeHelper treeHelper_;
+      edm::ParameterSet theConfig_;
 
       edm::EDGetTokenT<reco::VertexCollection> vertexSrc_;
       edm::EDGetTokenT<edm::View<reco::Track> > trackSrc_;
@@ -91,7 +95,6 @@ class HITrackProfiler : public edm::EDAnalyzer {
       std::vector<double> ptBins_;
       std::vector<double> etaBins_;
 
-      
       std::vector<double> vtxWeightParameters_;
       bool doVtxReweighting_;
 
@@ -115,6 +118,7 @@ class HITrackProfiler : public edm::EDAnalyzer {
 
 HITrackProfiler::HITrackProfiler(const edm::ParameterSet& iConfig):
 treeHelper_(),
+theConfig_(iConfig),
 vertexSrc_(consumes<reco::VertexCollection>(iConfig.getParameter<edm::InputTag>("vertexSrc"))),
 trackSrc_(consumes<edm::View<reco::Track> >(iConfig.getParameter<edm::InputTag>("trackSrc"))),
 tpFakSrc_(consumes<TrackingParticleCollection>(iConfig.getParameter<edm::InputTag>("tpFakSrc"))),
@@ -155,6 +159,8 @@ centralitySrc_(consumes<int>(iConfig.getParameter<edm::InputTag>("centralitySrc"
      trkTree_["rec"]->Branch("recValues",&treeHelper_.b,treeHelper_.hiTrackLeafString.Data());
      trkTree_["sim"] = fs->make<TTree>("simTree","simTree");
      trkTree_["sim"]->Branch("simValues",&treeHelper_.b,treeHelper_.hiTrackLeafString.Data());
+	   recHitTree_ = fs->make<TTree>("recHitTree","recHitTree");
+	   treeHelper_.SetRecHitTree(recHitTree_);
    }
 }
 
@@ -194,6 +200,8 @@ HITrackProfiler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
    // sort the vertcies by number of tracks in descending order
    reco::VertexCollection vsorted = *vertex;
    std::sort( vsorted.begin(), vsorted.end(), HITrackProfiler::vtxSort );
+
+   TrackerHitAssociator  *theHitAssociator = new TrackerHitAssociator(iEvent, theConfig_);
 
    // skip events with no PV, this should not happen
    if( vsorted.size() == 0) return;
@@ -321,11 +329,23 @@ HITrackProfiler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
              std::cout << std::endl << "      ADC: ";
              for( const auto & adc : stripRecHit2D->cluster()->amplitudes() )
                std::cout << (int)adc << " ";
+			   
+             std::vector<PSimHit> simHits = theHitAssociator->associateHit(**rechit);
+		     std::cout << "size of simhits = " << simHits.size() << std::endl;
+             for (unsigned int hitIter = 0 ; hitIter < simHits.size(); ++hitIter){
+               std::cout << "sim hit detunitId = " << simHits[hitIter].detUnitId();
+               std::cout << " trackId = " << simHits[hitIter].trackId();
+               std::cout << " eventId = " << (int) simHits[hitIter].eventId().event() << std::endl;
+			   std::cout << std::endl;
+             }
+         
+             std::cout  << std::endl;
            } 
       
          }
 
          std::cout  << std::endl;
+
        }
      }
 
@@ -358,19 +378,24 @@ HITrackProfiler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
        if( fillNTuples_) treeHelper_.Set(*tr, vsorted[0], cbin); 
        trkCorr2D_["hfak"]->Fill(tr->eta(), tr->pt(), w);
      }
-     if( fillNTuples_) trkTree_["rec"]->Fill(); 
+     if( fillNTuples_)
+     {
+       trkTree_["rec"]->Fill(); 
+       recHitTree_->Fill(); 
+     }
      std::cout << std::endl;
    }
 
    // ---------------------
    // loop through sim particles to fill matched, multiple,  and sim histograms 
    // ---------------------
-
+   
+   std::cout << "Number of tracking particles = " << TPCollectionHeff->size() << std::endl;
    for(TrackingParticleCollection::size_type i=0; i<TPCollectionHeff->size(); i++) 
    {      
      TrackingParticleRef tpr(TPCollectionHeff, i);
      TrackingParticle* tp=const_cast<TrackingParticle*>(tpr.get());
-         
+     std::cout << "Tracking particle (pt, eta, phi) = "<< tp->pt() << " , " << tp->eta() << " , " << tp->phi() << std::endl;  
      if(tp->pt() < 5.0 || fabs(tp->eta()) > 2.4 || tp->charge()==0) continue; //only charged primaries
      
      //std::cout << *tp ;
@@ -408,7 +433,19 @@ HITrackProfiler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
      if(nrec>1) trkCorr2D_["hmul"]->Fill(tp->eta(),tp->pt(), w);
      if( fillNTuples_) trkTree_["sim"]->Fill(); 
      std::cout << std::endl;
+     
+     for( auto simtrack = tp->g4Track_begin(); simtrack != tp->g4Track_end(); ++simtrack )
+     {
+	   TLorentzVector * vsimtrack = new TLorentzVector(simtrack->momentum().x(), simtrack->momentum().y(), simtrack->momentum().z(), simtrack->momentum().t());
+       std::cout << "sim track momentum (4-vector) = " << simtrack->momentum() << " , "
+                 << "trackID = " << simtrack->trackId() << " , "
+	             <<  "( pt, eta, phi ) = " << vsimtrack->Pt() << " , "
+	             << vsimtrack->Eta() << " , "
+	             << vsimtrack->Phi() << std::endl;
+     }
+
    }
+   delete theHitAssociator;
 }
 
 bool

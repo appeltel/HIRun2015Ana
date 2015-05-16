@@ -5,11 +5,17 @@
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "SimDataFormats/TrackingAnalysis/interface/TrackingParticle.h"
 #include "SimDataFormats/TrackingAnalysis/interface/TrackingParticleFwd.h"
+#include "DataFormats/TrackerRecHit2D/interface/SiStripRecHit2D.h"
+#include "DataFormats/TrackerRecHit2D/interface/SiStripRecHit1D.h"
+#include "DataFormats/TrackerRecHit2D/interface/SiPixelRecHit.h"
 #include <DataFormats/VertexReco/interface/Vertex.h>
 #include <DataFormats/VertexReco/interface/VertexFwd.h>
 
 #include <TString.h>
+#include <TTree.h>
 
+#define maxhits 30
+#define maxadc 30
 
 // Branches for track correction analysis ntuples
 
@@ -69,6 +75,25 @@ typedef struct
 
 } HITrackBranches_t;
 
+typedef struct
+{
+  Int_t hitr;
+  Int_t hitrType[maxhits];
+  Int_t hitrRawId[maxhits];
+  Float_t hitrR[maxhits];
+  Float_t hitrPhi[maxhits];
+  Float_t hitrZ[maxhits];
+  Float_t hitrLocX[maxhits];
+  Float_t hitrLocY[maxhits];
+  Int_t hitrCharge[maxhits];
+  Int_t nadc[maxhits];
+  Int_t nadcX[maxhits];
+  Int_t nadcY[maxhits];
+  Int_t adc[maxhits][maxadc];
+  Int_t adcX[maxhits][maxadc];
+  Int_t adcY[maxhits][maxadc];
+  
+} HIHitBranches_t;
 
 // Helper class for producing track correction ntuples
 
@@ -85,12 +110,16 @@ class HITrackCorrectionTreeHelper
     void Set(const TrackingParticle &, int);
 
     HITrackBranches_t b;
+    HIHitBranches_t bhit;
     TString hiTrackLeafString;
- 
+    void SetRecHitTree(TTree *);  
+
   private:
     // these are just to factorize setting the Track or TP information
     void SetTrack(const reco::Track &, const reco::Vertex &);
     void SetTP(const TrackingParticle &);  
+    void SetRecHits(const reco::Track &);  
+    void ResetRecHits();
 
 };
 
