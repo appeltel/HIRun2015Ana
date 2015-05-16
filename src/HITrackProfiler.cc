@@ -395,7 +395,7 @@ HITrackProfiler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
    {      
      TrackingParticleRef tpr(TPCollectionHeff, i);
      TrackingParticle* tp=const_cast<TrackingParticle*>(tpr.get());
-     cout << "Tracking particle (pt, eta, phi) = "<< tp->pt() << " , " << tp->eta() << " , " << tp->phi() << endl;  
+     std::cout << "Tracking particle (pt, eta, phi) = "<< tp->pt() << " , " << tp->eta() << " , " << tp->phi() << std::endl;  
      if(tp->pt() < 5.0 || fabs(tp->eta()) > 2.4 || tp->charge()==0) continue; //only charged primaries
      
      //std::cout << *tp ;
