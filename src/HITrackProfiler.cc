@@ -4,6 +4,11 @@
 //
 //
 
+// Do not compile - this class is broken due to change in 
+// TrackerHitAssociator interface as of 750_pre5. Need to fix.
+//
+#ifdef THIS_CLASS_IS_CURRENTLY_BROKEN
+
 #include <memory>
 #include <algorithm>
 
@@ -530,3 +535,5 @@ HITrackProfiler::endJob()
 }
 
 DEFINE_FWK_MODULE(HITrackProfiler);
+
+#endif
