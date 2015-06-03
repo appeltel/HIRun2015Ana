@@ -8,7 +8,7 @@ void plotHistHi() {
 
   TFile *f = new TFile("./trackCorrections.root");
 
-  char ndir[256] = "SimpleTrkCorr";
+  char ndir[256] = "HITrackCorrections";
   double ptmax = 5.;
 
 
