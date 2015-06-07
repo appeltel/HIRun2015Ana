@@ -10,19 +10,19 @@ HITrackCorrectionTreeHelper::HITrackCorrectionTreeHelper()
 }
 
 void
-HITrackCorrectionTreeHelper::Set(const TrackingParticle & p, const reco::Track & t, const reco::Vertex & v, int matches, int cbin)
+HITrackCorrectionTreeHelper::Set(const TrackingParticle & p, const reco::Track & t, const reco::Vertex & v, int matches, int cbin, bool setRecHits)
 {
 
   SetTP(p);
-  SetTrack(t,v); 
+  SetTrack(t,v,setRecHits); 
   b.nmatch = matches;
   b.cbin = cbin;
 }
 
 void
-HITrackCorrectionTreeHelper::Set(const reco::Track & t, const reco::Vertex & v, int cbin)
+HITrackCorrectionTreeHelper::Set(const reco::Track & t, const reco::Vertex & v, int cbin, bool setRecHits)
 {
-  SetTrack(t,v);
+  SetTrack(t,v, setRecHits);
   b.nmatch = 0;
   b.cbin = cbin;
 }
@@ -36,7 +36,7 @@ HITrackCorrectionTreeHelper::Set(const TrackingParticle & p, int cbin)
 }
 
 void
-HITrackCorrectionTreeHelper::SetTrack(const reco::Track & t, const reco::Vertex & v)
+HITrackCorrectionTreeHelper::SetTrack(const reco::Track & t, const reco::Vertex & v, bool setRecHits)
 {
   b.charger = t.charge();
   b.ptr = t.pt();
@@ -69,7 +69,8 @@ HITrackCorrectionTreeHelper::SetTrack(const reco::Track & t, const reco::Vertex 
   b.algo = t.algo();
   b.highPurityr = t.quality(reco::TrackBase::qualityByName("highPurity"));
   
-  SetRecHits(t);
+  if( setRecHits )
+      SetRecHits(t);
 }
 
 void

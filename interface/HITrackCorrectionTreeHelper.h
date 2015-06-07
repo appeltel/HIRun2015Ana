@@ -103,10 +103,10 @@ class HITrackCorrectionTreeHelper
 
     HITrackCorrectionTreeHelper();
 
-    void Set(const TrackingParticle &, const reco::Track &, const reco::Vertex &, int, int );
+    void Set(const TrackingParticle &, const reco::Track &, const reco::Vertex &, int, int, bool setRecHits = false );
 
     // need polymorphic Set functions for unmatched case where there is no Track or TP
-    void Set(const reco::Track &, const reco::Vertex &, int);
+    void Set(const reco::Track &, const reco::Vertex &, int, bool setRecHits = false);
     void Set(const TrackingParticle &, int);
 
     HITrackBranches_t b;
@@ -116,7 +116,7 @@ class HITrackCorrectionTreeHelper
 
   private:
     // these are just to factorize setting the Track or TP information
-    void SetTrack(const reco::Track &, const reco::Vertex &);
+    void SetTrack(const reco::Track &, const reco::Vertex &, bool setRecHits = false);
     void SetTP(const TrackingParticle &);  
     void SetRecHits(const reco::Track &);  
     void ResetRecHits();

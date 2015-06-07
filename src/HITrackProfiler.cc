@@ -359,7 +359,7 @@ HITrackProfiler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
        tp = recSimColl[track];
        mtp = tp.begin()->first.get();  
      
-       if( fillNTuples_) treeHelper_.Set(*mtp, *tr, vsorted[0], tp.size(), cbin); 
+       if( fillNTuples_) treeHelper_.Set(*mtp, *tr, vsorted[0], tp.size(), cbin, true); 
        for( const auto & vtpp : recSimColl[track] )
        { 
          auto vtp = vtpp.first.get();
@@ -380,7 +380,7 @@ HITrackProfiler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
      }
      else
      {
-       if( fillNTuples_) treeHelper_.Set(*tr, vsorted[0], cbin); 
+       if( fillNTuples_) treeHelper_.Set(*tr, vsorted[0], cbin, true); 
        trkCorr2D_["hfak"]->Fill(tr->eta(), tr->pt(), w);
      }
      if( fillNTuples_)
@@ -432,7 +432,7 @@ HITrackProfiler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
          if( doMomRes_ ) momRes_->Fill( tp->eta(), tp->pt(), tmtr->pt(), w);
        }
      }
-     if( nrec>0 && fillNTuples_ ) treeHelper_.Set(*tp, *(rt.begin()->first.get()), vsorted[0], rt.size(), cbin);
+     if( nrec>0 && fillNTuples_ ) treeHelper_.Set(*tp, *(rt.begin()->first.get()), vsorted[0], rt.size(), cbin, true);
      if( nrec==0 && fillNTuples_ ) treeHelper_.Set(*tp, cbin);
      if(nrec>0) trkCorr2D_["heff"]->Fill(tp->eta(),tp->pt(), w);
      if(nrec>1) trkCorr2D_["hmul"]->Fill(tp->eta(),tp->pt(), w);
