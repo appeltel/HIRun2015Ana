@@ -57,6 +57,7 @@ class HITrackCorrectionAnalyzer : public edm::EDAnalyzer {
 
       std::map<std::string,TTree*> trkTree_;
       std::map<std::string,TH2F*> trkCorr2D_;
+      std::map<std::string,TH3F*> trkCorr3D_;
       TH3F * momRes_;
       TH1F * vtxZ_;
       TF1 * vtxWeightFunc_;
@@ -72,6 +73,7 @@ class HITrackCorrectionAnalyzer : public edm::EDAnalyzer {
 
       std::vector<double> ptBins_;
       std::vector<double> etaBins_;
+      std::vector<double> occBins_;
 
       
       std::vector<double> vtxWeightParameters_;
@@ -105,6 +107,7 @@ associatorMapRTS_(consumes<reco::RecoToSimCollection>(iConfig.getParameter<edm::
 associatorMapSTR_(consumes<reco::SimToRecoCollection>(iConfig.getParameter<edm::InputTag>("associatorMap"))),
 ptBins_(iConfig.getParameter<std::vector<double> >("ptBins")),
 etaBins_(iConfig.getParameter<std::vector<double> >("etaBins")),
+occBins_(iConfig.getParameter<std::vector<double> >("occBins")),
 vtxWeightParameters_(iConfig.getParameter<std::vector<double> >("vtxWeightParameters")),
 doVtxReweighting_(iConfig.getParameter<bool>("doVtxReweighting")),
 applyVertexZCut_(iConfig.getParameter<bool>("applyVertexZCut")),
@@ -206,11 +209,13 @@ HITrackCorrectionAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
    // note if there is no centrality information multiplicity 
    // will be used in place of the centrality
    int cbin = multiplicity;
+   int occ = multiplicity;
    if( useCentrality_ )
    {
      edm::Handle<int> centralityBin;
      iEvent.getByToken(centralitySrc_, centralityBin);
      cbin = *centralityBin;
+     occ = cbin;
    } 
 
    // ---------------------
@@ -224,6 +229,7 @@ HITrackCorrectionAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
      if( ! passesTrackCuts(*tr, vsorted[0]) ) continue;
 
      trkCorr2D_["hrec"]->Fill(tr->eta(), tr->pt(), w);
+     trkCorr3D_["hrec3D"]->Fill(tr->eta(), tr->pt(), occ, w);
 
      // look for match to simulated particle, use first match if it exists
      std::vector<std::pair<TrackingParticleRef, double> > tp;
@@ -236,12 +242,14 @@ HITrackCorrectionAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
        if( mtp->status() < 0 ) 
        {
          trkCorr2D_["hsec"]->Fill(tr->eta(), tr->pt(), w);     
+         trkCorr3D_["hsec3D"]->Fill(tr->eta(), tr->pt(), occ, w);     
        }
      }
      else
      {
        if( fillNTuples_) treeHelper_.Set(*tr, vsorted[0], cbin); 
        trkCorr2D_["hfak"]->Fill(tr->eta(), tr->pt(), w);
+       trkCorr3D_["hfak3D"]->Fill(tr->eta(), tr->pt(), occ, w);
      }
      if( fillNTuples_) trkTree_["rec"]->Fill(); 
    }
@@ -258,6 +266,7 @@ HITrackCorrectionAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
      if(tp->status() < 0 || tp->charge()==0) continue; //only charged primaries
 
      trkCorr2D_["hsim"]->Fill(tp->eta(),tp->pt(), w);
+     trkCorr3D_["hsim3D"]->Fill(tp->eta(),tp->pt(), occ, w);
 
      // find number of matched reco tracks that pass cuts
      std::vector<std::pair<edm::RefToBase<reco::Track>, double> > rt;
@@ -277,7 +286,9 @@ HITrackCorrectionAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSet
      if( nrec>0 && fillNTuples_ ) treeHelper_.Set(*tp, *(rt.begin()->first.get()), vsorted[0], rt.size(), cbin);
      if( nrec==0 && fillNTuples_ ) treeHelper_.Set(*tp, cbin);
      if(nrec>0) trkCorr2D_["heff"]->Fill(tp->eta(),tp->pt(), w);
+     if(nrec>0) trkCorr3D_["heff3D"]->Fill(tp->eta(),tp->pt(), occ, w);
      if(nrec>1) trkCorr2D_["hmul"]->Fill(tp->eta(),tp->pt(), w);
+     if(nrec>1) trkCorr3D_["hmul3D"]->Fill(tp->eta(),tp->pt(), occ, w);
      if( fillNTuples_) trkTree_["sim"]->Fill(); 
    }
 }
@@ -323,6 +334,17 @@ HITrackCorrectionAnalyzer::initHistos(const edm::Service<TFileService> & fs)
      trkCorr2D_[name] = fs->make<TH2F>(name.c_str(),";#eta;p_{T}",
                            etaBins_.size()-1, &etaBins_[0],
                            ptBins_.size()-1, &ptBins_[0]);
+  }
+
+  std::vector<std::string> hNames3D = { "hsim3D", "hrec3D", "hmul3D", "hfak3D",
+                                        "heff3D", "hsec3D" };
+
+  for( auto name : hNames3D )
+  {
+     trkCorr3D_[name] = fs->make<TH3F>(name.c_str(),";#eta;p_{T};occ",
+                           etaBins_.size()-1, &etaBins_[0],
+                           ptBins_.size()-1, &ptBins_[0],
+                           occBins_.size()-1, &occBins_[0]);
   }
 
 
