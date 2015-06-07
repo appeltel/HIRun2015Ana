@@ -55,6 +55,8 @@ process.RECODEBUGoutput = cms.OutputModule("PoolOutputModule",
     splitLevel = cms.untracked.int32(0)
 )
 
+process.RECODEBUGoutput.outputCommands += ['keep *_hiConformalPixelTracks_*_*']
+
 # Additional output definition
 
 # Other statements
